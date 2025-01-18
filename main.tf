@@ -1,3 +1,12 @@
+data "aws_route53_zone" "selected" {
+  name         = var.domain_name
+  private_zone = false
+}
+
+data "aws_security_group" "selected" {
+  id = "sg-0b4306f19233f1240"
+}
+
 resource "aws_security_group" "allow_specific_ips" {
   name        = "allow-specific-ips"
   description = "Allow specific IP addresses"
@@ -24,6 +33,14 @@ resource "aws_security_group" "allow_specific_ips" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = var.admin_ips
+  }
+
+  ingress {
+    description = "Allow NFS access from default VPC in ca-central-1"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = ["172.31.0.0/16"]
   }
 
   egress {
@@ -83,10 +100,13 @@ resource "aws_iam_instance_profile" "instance_profile" {
 }
 
 resource "aws_instance" "foundry_instance" {
-  ami               = "ami-0956b8dc6ddc445ec"
-  instance_type     = var.instance_type
-  key_name          = var.key_name
-  security_groups   = [aws_security_group.allow_specific_ips.name]
+  ami           = "ami-0956b8dc6ddc445ec"
+  instance_type = var.instance_type
+  key_name      = var.key_name
+  security_groups = [
+    aws_security_group.allow_specific_ips.name,
+    data.aws_security_group.selected.name
+  ]
   root_block_device {
     encrypted = true
   }
@@ -94,9 +114,8 @@ resource "aws_instance" "foundry_instance" {
   tags = {
     Name = "FoundryVTT"
   }
-  iam_instance_profile   = aws_iam_instance_profile.instance_profile.name
-
-  user_data = <<-EOF
+  iam_instance_profile = aws_iam_instance_profile.instance_profile.name
+  user_data            = <<-EOF
     #!/bin/bash
     yum update -y
     yum install -y docker aws-cli
@@ -108,16 +127,25 @@ resource "aws_instance" "foundry_instance" {
 
     mkdir -p /home/ec2-user/foundry
     cd /home/ec2-user/foundry
-    
-    # Will need to be replaced with a more resilient solution
-    mkdir -p /home/ec2-user/foundry/data
+
+    # Create EFS mount point
+    mkdir -p /mnt/efs
+
+    # Mount the EFS file system using your known EFS DNS name
+    mount -t nfs4 -o nfsvers=4.1 ${var.efs_safehouse}:/ /mnt/efs
+
+    # Ensure the EFS mount persists across reboots
+    echo "${var.efs_safehouse}:/ /mnt/efs nfs4 defaults,_netdev 0 0" >> /etc/fstab
+
+    # Create a symlink for easier access
+    ln -s /mnt/efs /home/ec2-user/foundry/data
 
     # Retrieve JSON config files from S3
-    aws s3 cp s3://phil-foundryvtt/InstanceConfig/01172025/options.json ./options.json
-    aws s3 cp s3://phil-foundryvtt/InstanceConfig/01172025/secrets.json ./secrets.json
+    aws s3 cp s3://phil-foundryvtt/InstanceConfig/01172025/options.json /home/ec2-user/foundry/options.json
+    aws s3 cp s3://phil-foundryvtt/InstanceConfig/01172025/secrets.json /home/ec2-user/foundry/secrets.json
 
     # Writing the Docker Compose file directly into a file
-    cat > docker-compose.yml <<EOL
+    cat > /home/ec2-user/foundry/docker-compose.yml <<EOL
     ---
     version: "3.8"
 
@@ -151,13 +179,21 @@ resource "aws_instance" "foundry_instance" {
           - FOUNDRY_AWS_CONFIG=awsOptions.json
           - TIMEZONE=US/Eastern
           - FOUNDRY_PROXY_PORT=80
+          - FOUNDRY_HOSTNAME=edge-of-the-universe-foundryvtt.ca
     EOL
 
+    # Start the service
     sudo docker-compose up -d
   EOF
 }
 
-output "instance_public_ip" {
-  value = aws_instance.foundry_instance.public_ip
-}
+resource "aws_route53_record" "foundryvtt_record" {
+  zone_id = data.aws_route53_zone.selected.zone_id
 
+  name = "${var.subdomain_name}.${var.domain_name}"
+  type = "A"
+  ttl  = "300"
+
+  # Associate the public IP of the EC2 instance
+  records = [aws_instance.foundry_instance.public_ip]
+}
