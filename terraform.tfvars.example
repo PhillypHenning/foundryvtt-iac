@@ -1,0 +1,17 @@
+aws_preferred_zone = "us-east-1a"
+aws_region         = "us-east-1"
+
+instance_type = "t2.micro"
+
+allowed_ips = []
+admin_ips   = ["<your IP>/32"]
+key_name    = "foundryvtt-keypair" # Will need to be ClickOps
+
+s3_instance_config_uri = "s3://path/to/data"                     # Will need to be ClickOps
+efs_safehouse          = "fs-xxxxxx.efs.us-east-1.amazonaws.com" # Will need to be ClickOps
+
+default_security_group = "sg-xxxxxx"
+
+# This are optional
+domain_name    = "domain.com"
+subdomain_name = "subdomain"

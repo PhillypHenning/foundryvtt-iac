@@ -1,10 +1,11 @@
+# This are optional
 data "aws_route53_zone" "selected" {
   name         = var.domain_name
   private_zone = false
 }
 
 data "aws_security_group" "selected" {
-  id = "sg-0b4306f19233f1240"
+  id = var.default_security_group
 }
 
 resource "aws_security_group" "allow_specific_ips" {
@@ -141,8 +142,8 @@ resource "aws_instance" "foundry_instance" {
     ln -s /mnt/efs /home/ec2-user/foundry/data
 
     # Retrieve JSON config files from S3
-    aws s3 cp s3://phil-foundryvtt/InstanceConfig/01172025/options.json /home/ec2-user/foundry/options.json
-    aws s3 cp s3://phil-foundryvtt/InstanceConfig/01172025/secrets.json /home/ec2-user/foundry/secrets.json
+    aws s3 cp ${var.s3_instance_config_uri}/options.json /home/ec2-user/foundry/options.json
+    aws s3 cp ${var.s3_instance_config_uri}/secrets.json /home/ec2-user/foundry/secrets.json
 
     # Writing the Docker Compose file directly into a file
     cat > /home/ec2-user/foundry/docker-compose.yml <<EOL
@@ -179,7 +180,7 @@ resource "aws_instance" "foundry_instance" {
           - FOUNDRY_AWS_CONFIG=awsOptions.json
           - TIMEZONE=US/Eastern
           - FOUNDRY_PROXY_PORT=80
-          - FOUNDRY_HOSTNAME=edge-of-the-universe-foundryvtt.ca
+          - FOUNDRY_HOSTNAME=${var.subdomain_name}.${var.domain_name}
     EOL
 
     # Start the service
@@ -187,6 +188,7 @@ resource "aws_instance" "foundry_instance" {
   EOF
 }
 
+# This are optional
 resource "aws_route53_record" "foundryvtt_record" {
   zone_id = data.aws_route53_zone.selected.zone_id
 

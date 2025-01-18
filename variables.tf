@@ -10,17 +10,14 @@ variable "admin_ips" {
 
 variable "aws_region" {
   description = "AWS Region"
-  default     = "ca-central-1"
 }
 
 variable "aws_preferred_zone" {
   description = "AWS Zone"
-  default     = "ca-central-1a"
 }
 
 variable "instance_type" {
   description = "EC2 Instance Type"
-  default     = "t2.micro" # Free-tier eligible instance
 }
 
 variable "key_name" {
@@ -33,10 +30,16 @@ variable "efs_safehouse" {
 
 variable "subdomain_name" {
   description = "The subdomain prefix for the Route53 record."
-  default     = "foundryvtt"
 }
 
 variable "domain_name" {
   description = "The main domain name for the Route53 hosted zone."
-  default     = "edge-of-the-universe.ca"
+}
+
+variable "default_security_group" {
+  description = "The default security group"
+}
+
+variable "s3_instance_config_uri" {
+  description = "S3 URI to instance config"
 }
