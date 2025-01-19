@@ -39,3 +39,7 @@ terraform.rc
 
 # SSH keys
 *.cer
+
+# Project
+options.json
+todo.md

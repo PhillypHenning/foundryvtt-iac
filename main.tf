@@ -1,8 +1,12 @@
-# This are optional
+#################
+## DOMAIN NAME ##
+## OPTIONAL    ##
+#################
 data "aws_route53_zone" "selected" {
   name         = var.domain_name
   private_zone = false
 }
+#################
 
 data "aws_security_group" "selected" {
   id = var.default_security_group
@@ -188,7 +192,10 @@ resource "aws_instance" "foundry_instance" {
   EOF
 }
 
-# This are optional
+#################
+## DOMAIN NAME ##
+## OPTIONAL    ##
+#################
 resource "aws_route53_record" "foundryvtt_record" {
   zone_id = data.aws_route53_zone.selected.zone_id
 
@@ -199,3 +206,42 @@ resource "aws_route53_record" "foundryvtt_record" {
   # Associate the public IP of the EC2 instance
   records = [aws_instance.foundry_instance.public_ip]
 }
+#################
+
+##############
+## BOT USER ##
+##############
+resource "aws_iam_user" "foundry_botuser" {
+  name = "foundry_botuser"
+}
+
+resource "aws_iam_policy" "foundry_botuser_s3_policy" {
+  name        = "FoundryS3ReadOnly"
+  description = "Policy to allow read-only access to specific S3 bucket"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::phil-foundryvtt/GameData/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_user_policy_attachment" "foundry_botuser_attach_s3_policy" {
+  policy_arn = aws_iam_policy.foundry_botuser_s3_policy.arn
+  user       = aws_iam_user.foundry_botuser.name
+}
+
+resource "aws_iam_access_key" "foundry_botuser_access_key" {
+  user = aws_iam_user.foundry_botuser.name
+}
+##############
+
