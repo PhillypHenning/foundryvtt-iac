@@ -1,8 +1,5 @@
 provider "aws" {
   region = "ca-central-1"
-  default_tags {
-    tags = aws_servicecatalogappregistry_application.foundry_appregistry.application_tag
-  }
 }
 
 terraform {

@@ -7,35 +7,19 @@ resource "aws_security_group" "allow_specific_ips" {
   description = "Allow specific IP addresses"
 
   ingress {
-    description = "Allow HTTP access for Allowed IPs"
+    description = "Allow HTTP (80) from anywhere"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = var.allowed_ips
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # ingress {
-  #   description = "Allow HTTPS access for Allowed IPs"
+  #   description = "Allow HTTPS (443) from anywhere"
   #   from_port   = 443
   #   to_port     = 443
   #   protocol    = "tcp"
-  #   cidr_blocks = var.allowed_ips
-  # }
-
-  ingress {
-    description = "Allow HTTP access for admin IPs"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = var.admin_ips
-  }
-
-  # ingress {
-  #   description = "Allow HTTPS access for admin IPs"
-  #   from_port   = 443
-  #   to_port     = 443
-  #   protocol    = "tcp"
-  #   cidr_blocks = var.admin_ips
+  #   cidr_blocks = ["0.0.0.0/0"]
   # }
 
   ingress {

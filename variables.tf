@@ -1,8 +1,3 @@
-variable "allowed_ips" {
-  description = "List of IPs allowed to access the instance"
-  type        = list(string)
-}
-
 variable "admin_ips" {
   description = "List of IPs allowed to access and SSH into the instance"
   type        = list(string)

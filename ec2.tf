@@ -2,6 +2,7 @@
 ## FOUNDRY INSTANCE ##
 ######################
 resource "aws_instance" "foundry_instance" {
+  depends_on    = [aws_s3_object.options_json]
   ami           = "ami-0956b8dc6ddc445ec"
   instance_type = var.instance_type
   key_name      = var.key_name
