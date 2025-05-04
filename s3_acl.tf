@@ -17,6 +17,18 @@ resource "aws_s3_bucket_policy" "foundry-botuser-read-access" {
           "arn:aws:s3:::phil-foundryvtt",
           "arn:aws:s3:::phil-foundryvtt/*"
         ]
+      },
+      {
+        "Sid" : "AllowAssumedEc2RolePush",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "${aws_iam_role.instance_role.arn}"
+        },
+        "Action" : "s3:PutObject",
+        "Resource" : [
+          "arn:aws:s3:::phil-foundryvtt",
+          "arn:aws:s3:::phil-foundryvtt/*"
+        ]
       }
     ]
   })

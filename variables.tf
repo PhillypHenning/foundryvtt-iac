@@ -35,6 +35,24 @@ variable "default_security_group" {
   description = "The default security group"
 }
 
-variable "s3_instance_config_uri" {
-  description = "S3 URI to instance config"
+variable "s3_instance_config" {
+  description = "Path to instance config within S3"
+}
+
+variable "worlds_data_dir" {
+  type = string
+}
+
+variable "s3_snapshot_directory" {
+  type    = string
+  default = "snapshots"
+}
+
+variable "s3_bucket" {
+  type = string
+}
+
+variable "ssh_private_key_path" {
+  type        = string
+  description = "Absolute path to the EC2 private key PEM file"
 }

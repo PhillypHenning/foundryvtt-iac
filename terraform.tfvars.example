@@ -6,10 +6,17 @@ instance_type = "t2.micro"
 admin_ips   = ["<your IP>/32"]
 key_name    = "foundryvtt-keypair" # Will need to be ClickOps
 
-s3_instance_config_uri = "s3://path/to/data"                     # Will need to be ClickOps
+s3_instance_config = "path/to/instance_data"                     # Will need to be ClickOps
 efs_safehouse          = "fs-xxxxxx.efs.us-east-1.amazonaws.com" # Will need to be ClickOps
 
 default_security_group = "sg-xxxxxx"
+
+
+worlds_data_dir       = "/home/ec2-user/foundry/data/Data/worlds"
+s3_bucket             = "example-s3"
+s3_snapshot_directory = "snapshots"
+
+ssh_private_key_path = "/home/youruser/.ssh/your-key.pem"
 
 # This are optional
 domain_name    = "domain.com"
