@@ -68,7 +68,7 @@ resource "aws_instance" "foundry_instance" {
 
     services:
       foundry:
-        image: felddy/foundryvtt:release-13.342.0
+        image: felddy/foundryvtt:release-13.351.0
         hostname: my_foundry_host
         restart: "no"
         volumes:
@@ -87,7 +87,6 @@ resource "aws_instance" "foundry_instance" {
           - source: config_json
             target: config.json
         environment:
-          # - CONTAINER_PRESERVE_CONFIG=false
           - CONTAINER_VERBOSE=true
           - FOUNDRY_AWS_CONFIG=awsOptions.json
           - TIMEZONE=US/Eastern
