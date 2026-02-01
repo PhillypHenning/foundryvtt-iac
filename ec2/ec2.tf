@@ -118,22 +118,19 @@ data "template_file" "backup_script" {
     S3_BUCKET="${var.s3_bucket}"
     S3_SNAPSHOT_DIRECTORY="${var.s3_snapshot_directory}"
     DATE=$(date +"%Y-%m-%d_%H-%M-%S")
-    ZIP_FILE="/tmp/data-backup-$DATE.zip"
+    BACKUP_NAME="data-backup-$DATE.tar.gz"
 
-    zip -r "$ZIP_FILE" "$DATA_DIR"
+    echo "Starting backup of $DATA_DIR to s3://$S3_BUCKET/$S3_SNAPSHOT_DIRECTORY/$BACKUP_NAME"
+    
+    # Stream tar directly to S3 without creating local file
+    cd "$DATA_DIR" && tar -czf - . | aws s3 cp - "s3://$S3_BUCKET/$S3_SNAPSHOT_DIRECTORY/$BACKUP_NAME"
+    
     if [ $? -ne 0 ]; then
-      echo "Zipping failed!"
+      echo "Backup failed!"
       exit 1
     fi
     
-    aws s3 cp "$ZIP_FILE" "s3://$S3_BUCKET/$S3_SNAPSHOT_DIRECTORY/"
-    if [ $? -ne 0 ]; then
-      echo "Upload failed!"
-      exit 1
-    fi
-    
-    echo "Backup and upload completed successfully."
-    rm -f "$ZIP_FILE"
+    echo "Backup completed successfully at $(date)"
   EOT
   vars = {
     worlds_data_dir       = var.worlds_data_dir
@@ -161,7 +158,7 @@ resource "null_resource" "cron_backup" {
   triggers = {
     script_content = data.template_file.backup_script.rendered
     cron_timing    = "0 3 * * 0"
-    force          = "04052025" # Update this to force recreation
+    force          = "02012026" # Update this to force recreation
   }
 
   provisioner "remote-exec" {
