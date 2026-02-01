@@ -22,5 +22,17 @@ else
     echo "WARNING: OPTIONS_SECRET_ARN not set, skipping options.json fetch"
 fi
 
+# Remove any stale lock files from previous runs
+# EFS/NFS doesn't handle lock files properly, so we clean them up on startup
+echo "Checking for stale lock files..."
+if [ -f /data/.lock ]; then
+    echo "Removing stale lock file: /data/.lock"
+    rm -f /data/.lock
+fi
+if [ -f /data/Config/options.json.lock ]; then
+    echo "Removing stale lock file: /data/Config/options.json.lock"
+    rm -f /data/Config/options.json.lock
+fi
+
 echo "Starting FoundryVTT..."
 cd /home/node && exec ./entrypoint.sh "$@"

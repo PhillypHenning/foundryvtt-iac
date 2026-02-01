@@ -37,3 +37,18 @@ output "options_secret_arn" {
   description = "ARN of the options.json secret"
   value       = data.aws_secretsmanager_secret.foundry_options_file.arn
 }
+
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = aws_lb.foundry_alb.dns_name
+}
+
+output "alb_zone_id" {
+  description = "Zone ID of the Application Load Balancer"
+  value       = aws_lb.foundry_alb.zone_id
+}
+
+output "foundry_url" {
+  description = "URL to access FoundryVTT"
+  value       = "http://${var.subdomain_name}.${var.domain_name}"
+}

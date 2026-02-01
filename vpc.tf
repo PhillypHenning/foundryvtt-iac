@@ -18,11 +18,11 @@ resource "aws_security_group" "foundry_ecs_task_sg" {
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "FoundryVTT from Internet"
-    from_port   = var.foundry_port
-    to_port     = var.foundry_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "FoundryVTT from ALB"
+    from_port       = var.foundry_port
+    to_port         = var.foundry_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.foundry_alb_sg.id]
   }
 
   ingress {

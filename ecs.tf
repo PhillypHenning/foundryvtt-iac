@@ -101,10 +101,6 @@ resource "aws_ecs_task_definition" "foundry_ecs_task" {
         {
           name  = "FOUNDRY_AWS_CONFIG"
           value = "/data/Config/options.json"
-        },
-        {
-          name  = "CONTAINER_CACHE"
-          value = "/data/container_cache"
         }
         // FOUNDRY_HOSTNAME
         
@@ -134,7 +130,15 @@ resource "aws_ecs_service" "foundry_ecs_service" {
     assign_public_ip = true
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.foundry_tg.arn
+    container_name   = "foundryvtt"
+    container_port   = var.foundry_port
+  }
+
   enable_execute_command = true
+
+  depends_on = [aws_lb_listener.http]
 
   tags = {
     Name = "${var.project_name}-ecs-service"

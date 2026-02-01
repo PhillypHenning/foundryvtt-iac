@@ -69,3 +69,13 @@ variable "efs_file_system_id" {
   type        = string
 }
 
+# Route53 Configuration
+variable "domain_name" {
+  description = "The main domain name for the Route53 hosted zone"
+  type        = string
+}
+
+variable "subdomain_name" {
+  description = "The subdomain prefix for the Route53 record"
+  type        = string
+}
