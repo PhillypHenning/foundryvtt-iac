@@ -1,24 +1,101 @@
-#######################
-## FOUNDRY S3 ACCESS ##
-#######################
-resource "aws_iam_role" "instance_role" {
-  name = "ec2_s3_access_role"
+# ECS Task Execution Role (used by ECS to pull images, write logs)
+resource "aws_iam_role" "foundry_ecs_task_execution_role" {
+  name = "${var.project_name}-ecs-task-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
       }
-    }]
+    ]
+  })
+
+  tags = {
+    Name = "${var.project_name}-ecs-task-execution-role"
+  }
+}
+
+# Attach AWS managed policy for ECS task execution
+resource "aws_iam_role_policy_attachment" "foundry_ecs_task_execution_role_policy" {
+  role       = aws_iam_role.foundry_ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# ECS Task Role (used by the container application itself)
+resource "aws_iam_role" "foundry_ecs_task_role" {
+  name = "${var.project_name}-ecs-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.project_name}-ecs-task-role"
+  }
+}
+
+# Policy for Secrets Manager access
+resource "aws_iam_role_policy" "foundry_ecs_task_secrets_policy" {
+  name = "${var.project_name}-ecs-task-secrets-policy"
+  role = aws_iam_role.foundry_ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = [
+          data.aws_secretsmanager_secret.foundry_secrets.arn,
+          data.aws_secretsmanager_secret.foundry_options_file.arn
+        ]
+      }
+    ]
   })
 }
 
-resource "aws_iam_policy" "s3_access_policy" {
-  name        = "S3AccessPolicy"
-  description = "Policy to allow S3 access to specific bucket"
+# Policy for EFS access
+resource "aws_iam_role_policy" "foundry_ecs_task_efs_policy" {
+  name = "${var.project_name}-ecs-task-efs-policy"
+  role = aws_iam_role.foundry_ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "elasticfilesystem:ClientMount",
+          "elasticfilesystem:ClientWrite",
+          "elasticfilesystem:ClientRootAccess"
+        ]
+        Resource = "arn:aws:elasticfilesystem:${var.aws_region}:*:file-system/${var.efs_file_system_id}"
+      }
+    ]
+  })
+}
+
+# Policy for S3 access (for phil-foundryvtt bucket)
+resource "aws_iam_role_policy" "foundry_ecs_task_s3_policy" {
+  name = "${var.project_name}-ecs-task-s3-policy"
+  role = aws_iam_role.foundry_ecs_task_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -27,61 +104,15 @@ resource "aws_iam_policy" "s3_access_policy" {
         Effect = "Allow"
         Action = [
           "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
           "s3:ListBucket"
         ]
         Resource = [
           "arn:aws:s3:::phil-foundryvtt",
-          "arn:aws:s3:::phil-foundryvtt/InstanceConfig/01172025/*"
+          "arn:aws:s3:::phil-foundryvtt/*"
         ]
       }
     ]
   })
 }
-
-resource "aws_iam_role_policy_attachment" "attach_s3_access" {
-  policy_arn = aws_iam_policy.s3_access_policy.arn
-  role       = aws_iam_role.instance_role.name
-}
-
-resource "aws_iam_instance_profile" "instance_profile" {
-  name = "ec2_instance_profile"
-  role = aws_iam_role.instance_role.name
-}
-#######################
-
-##############
-## BOT USER ##
-##############
-resource "aws_iam_user" "foundry_botuser" {
-  name = "foundry_botuser"
-}
-
-resource "aws_iam_policy" "foundry_botuser_s3_policy" {
-  name        = "FoundryS3ReadOnly"
-  description = "Policy to allow read-only access to specific S3 bucket"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          "arn:aws:s3:::phil-foundryvtt/GameData/*"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_user_policy_attachment" "foundry_botuser_attach_s3_policy" {
-  policy_arn = aws_iam_policy.foundry_botuser_s3_policy.arn
-  user       = aws_iam_user.foundry_botuser.name
-}
-
-resource "aws_iam_access_key" "foundry_botuser_access_key" {
-  user = aws_iam_user.foundry_botuser.name
-}
-##############

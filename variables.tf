@@ -1,58 +1,81 @@
-variable "admin_ips" {
-  description = "List of IPs allowed to access and SSH into the instance"
-  type        = list(string)
-}
-
 variable "aws_region" {
-  description = "AWS Region"
+  description = "AWS region for resources"
+  type        = string
+  default     = "ca-central-1"
 }
 
-variable "aws_preferred_zone" {
-  description = "AWS Zone"
+variable "environment" {
+  description = "Environment name (e.g., production, staging)"
+  type        = string
+  default     = "production"
 }
 
-variable "instance_type" {
-  description = "EC2 Instance Type"
+variable "project_name" {
+  description = "Project name for resource naming"
+  type        = string
+  default     = "foundryvtt"
 }
 
-variable "key_name" {
-  description = "SSH Key Name for access"
+# ECS Configuration
+variable "ecs_cluster_arn" {
+  description = "ARN of the existing ECS cluster"
+  type        = string
 }
 
-variable "efs_safehouse" {
-  description = "URL of EFS safehouse"
+variable "foundry_image" {
+  description = "Docker image for FoundryVTT"
+  type        = string
+  default     = "awildphil/foundryvtt:latest"
+}
+
+variable "foundry_cpu" {
+  description = "CPU units for Fargate task (256, 512, 1024, 2048, 4096)"
+  type        = number
+  default     = 1024
+}
+
+variable "foundry_memory" {
+  description = "Memory for Fargate task in MB (512, 1024, 2048, 4096, 8192, 16384, 30720)"
+  type        = number
+  default     = 2048
+}
+
+variable "foundry_port" {
+  description = "Port FoundryVTT listens on"
+  type        = number
+  default     = 30000
+}
+
+variable "desired_count" {
+  description = "Desired number of Fargate tasks"
+  type        = number
+  default     = 1
+}
+
+# Secrets Manager
+variable "foundry_secrets_arn" {
+  description = "ARN of the Secrets Manager secret containing FoundryVTT credentials"
+  type        = string
+}
+
+variable "foundry_options_file_arn" {
+  description = "ARN of the Secrets Manager secret containing options.json configuration"
+  type        = string
+}
+
+# EFS Configuration
+variable "efs_file_system_id" {
+  description = "ID of the existing EFS file system for persistent storage"
+  type        = string
+}
+
+# Route53 Configuration
+variable "domain_name" {
+  description = "The main domain name for the Route53 hosted zone"
+  type        = string
 }
 
 variable "subdomain_name" {
-  description = "The subdomain prefix for the Route53 record."
-}
-
-variable "domain_name" {
-  description = "The main domain name for the Route53 hosted zone."
-}
-
-variable "default_security_group" {
-  description = "The default security group"
-}
-
-variable "s3_instance_config" {
-  description = "Path to instance config within S3"
-}
-
-variable "worlds_data_dir" {
-  type = string
-}
-
-variable "s3_snapshot_directory" {
-  type    = string
-  default = "snapshots"
-}
-
-variable "s3_bucket" {
-  type = string
-}
-
-variable "ssh_private_key_path" {
+  description = "The subdomain prefix for the Route53 record"
   type        = string
-  description = "Absolute path to the EC2 private key PEM file"
 }

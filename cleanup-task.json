@@ -1,0 +1,48 @@
+{
+  "family": "foundryvtt-cleanup",
+  "requiresCompatibilities": ["FARGATE"],
+  "networkMode": "awsvpc",
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::461706357402:role/foundryvtt-ecs-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::461706357402:role/foundryvtt-ecs-task-role",
+  "volumes": [
+    {
+      "name": "foundry-efs-storage",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-068eb40423baef0e9",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "iam": "ENABLED"
+        }
+      }
+    }
+  ],
+  "containerDefinitions": [
+    {
+      "name": "cleanup",
+      "image": "alpine:latest",
+      "essential": true,
+      "command": [
+        "sh",
+        "-c",
+        "echo 'Checking for lock files...' && find /data -name '*.lock' -type f && echo 'Removing lock files...' && find /data -name '*.lock' -type f -delete && echo 'Cleanup complete' && sleep 10"
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "foundry-efs-storage",
+          "containerPath": "/data",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/foundryvtt",
+          "awslogs-region": "ca-central-1",
+          "awslogs-stream-prefix": "cleanup"
+        }
+      }
+    }
+  ]
+}

@@ -1,14 +1,54 @@
-output "instance_public_ip" {
-  value = aws_instance.foundry_instance.public_ip
+output "ecs_cluster_name" {
+  description = "Name of the ECS cluster"
+  value       = data.aws_ecs_cluster.foundry_ecs_cluster.cluster_name
 }
 
-output "user_access_key" {
-  description = "Access key for the IAM user"
-  value       = aws_iam_access_key.foundry_botuser_access_key.id
+output "task_definition_arn" {
+  description = "ARN of the ECS task definition"
+  value       = aws_ecs_task_definition.foundry_ecs_task.arn
 }
 
-output "user_secret_key" {
-  description = "Secret key for the IAM user"
-  value       = aws_iam_access_key.foundry_botuser_access_key.secret
-  sensitive   = true
+output "cloudwatch_log_group" {
+  description = "CloudWatch log group for ECS tasks"
+  value       = aws_cloudwatch_log_group.foundry_ecs_logs.name
+}
+
+output "ecs_service_name" {
+  description = "Name of the ECS service"
+  value       = aws_ecs_service.foundry_ecs_service.name
+}
+
+output "vpc_id" {
+  description = "ID of the VPC"
+  value       = data.aws_vpc.default.id
+}
+
+output "subnet_ids" {
+  description = "IDs of the subnets"
+  value       = data.aws_subnets.default.ids
+}
+
+output "security_group_id" {
+  description = "ID of the ECS task security group"
+  value       = aws_security_group.foundry_ecs_task_sg.id
+}
+
+output "options_secret_arn" {
+  description = "ARN of the options.json secret"
+  value       = data.aws_secretsmanager_secret.foundry_options_file.arn
+}
+
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = aws_lb.foundry_alb.dns_name
+}
+
+output "alb_zone_id" {
+  description = "Zone ID of the Application Load Balancer"
+  value       = aws_lb.foundry_alb.zone_id
+}
+
+output "foundry_url" {
+  description = "URL to access FoundryVTT"
+  value       = "http://${var.subdomain_name}.${var.domain_name}"
 }
