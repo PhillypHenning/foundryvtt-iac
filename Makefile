@@ -2,7 +2,7 @@
 
 # Docker image settings
 IMAGE_NAME := awildphil/foundryvtt
-DOCKERFILE_DIR := ecs/docker
+DOCKERFILE_DIR := docker
 
 # Extract base image tag from Dockerfile (macOS compatible)
 BASE_TAG := $(shell sed -n 's/FROM felddy\/foundryvtt:\([^ ]*\).*/\1/p' $(DOCKERFILE_DIR)/Dockerfile)

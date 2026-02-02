@@ -95,15 +95,13 @@ resource "aws_ecs_task_definition" "foundry_ecs_task" {
           value = data.aws_secretsmanager_secret.foundry_options_file.arn
         },
         {
-          name  = "AWS_DEFAULT_REGION"
-          value = var.aws_region
-        },
-        {
           name  = "FOUNDRY_AWS_CONFIG"
           value = "/data/Config/options.json"
-        }
-        // FOUNDRY_HOSTNAME
-        
+        },
+        {
+          name  = "FOUNDRY_HOSTNAME"
+          value = "${var.subdomain_name}.${var.domain_name}"
+        }        
       ]
     }
   ])
@@ -135,6 +133,9 @@ resource "aws_ecs_service" "foundry_ecs_service" {
     container_name   = "foundryvtt"
     container_port   = var.foundry_port
   }
+
+  deployment_minimum_healthy_percent = 0
+  deployment_maximum_percent         = 100
 
   enable_execute_command = true
 
