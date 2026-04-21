@@ -57,29 +57,11 @@ resource "aws_ecs_task_definition" "foundry_backup_task" {
         }
       ]
 
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.foundry_backup_logs.name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "backup"
-        }
-      }
     }
   ])
 
   tags = {
     Name = "${var.project_name}-backup-task"
-  }
-}
-
-# CloudWatch Log Group for Backup Tasks
-resource "aws_cloudwatch_log_group" "foundry_backup_logs" {
-  name              = "/ecs/${var.project_name}-backup"
-  retention_in_days = 7
-
-  tags = {
-    Name = "${var.project_name}-backup-logs"
   }
 }
 

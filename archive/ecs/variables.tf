@@ -52,6 +52,12 @@ variable "desired_count" {
   default     = 1
 }
 
+variable "use_spot" {
+  description = "Use Fargate Spot pricing (~70% cheaper, but tasks can be interrupted by AWS)"
+  type        = bool
+  default     = false
+}
+
 # Secrets Manager
 variable "foundry_secrets_arn" {
   description = "ARN of the Secrets Manager secret containing FoundryVTT credentials"

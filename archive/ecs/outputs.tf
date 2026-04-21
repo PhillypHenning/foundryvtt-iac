@@ -8,11 +8,6 @@ output "task_definition_arn" {
   value       = aws_ecs_task_definition.foundry_ecs_task.arn
 }
 
-output "cloudwatch_log_group" {
-  description = "CloudWatch log group for ECS tasks"
-  value       = aws_cloudwatch_log_group.foundry_ecs_logs.name
-}
-
 output "ecs_service_name" {
   description = "Name of the ECS service"
   value       = aws_ecs_service.foundry_ecs_service.name

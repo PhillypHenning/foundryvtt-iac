@@ -3,16 +3,6 @@ data "aws_ecs_cluster" "foundry_ecs_cluster" {
   cluster_name = split("/", var.ecs_cluster_arn)[1]
 }
 
-# CloudWatch Log Group for ECS tasks
-resource "aws_cloudwatch_log_group" "foundry_ecs_logs" {
-  name              = "/ecs/${var.project_name}"
-  retention_in_days = 7
-
-  tags = {
-    Name = "${var.project_name}-ecs-logs"
-  }
-}
-
 # ECS Task Definition
 resource "aws_ecs_task_definition" "foundry_ecs_task" {
   family                   = "${var.project_name}-task"
@@ -55,15 +45,6 @@ resource "aws_ecs_task_definition" "foundry_ecs_task" {
           readOnly      = false
         }
       ]
-
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.foundry_ecs_logs.name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "foundryvtt"
-        }
-      }
 
       healthCheck = {
         command     = ["CMD-SHELL", "curl -f http://localhost:30000/api/status || exit 1"]
@@ -140,6 +121,11 @@ resource "aws_ecs_service" "foundry_ecs_service" {
   enable_execute_command = true
 
   depends_on = [aws_lb_listener.http]
+
+  # Prevent Terraform from overriding the desired_count managed by scheduled auto-scaling
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 
   tags = {
     Name = "${var.project_name}-ecs-service"

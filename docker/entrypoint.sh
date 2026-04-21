@@ -19,18 +19,16 @@ fi
 # EFS/NFS doesn't handle lock files properly, so we clean them up on startup
 echo "Checking for stale lock files..."
 
-# Find and display actual .lock files only
+# Find and display lock files/dirs
 echo "Searching for .lock files..."
-find /data -type f -name "*.lock" 2>/dev/null | while read -r file; do
-    echo "Found lock file: $file"
+find /data -name "*.lock" 2>/dev/null | while read -r file; do
+    echo "Found lock: $file"
 done
 
-# Remove all .lock files
+# Remove all .lock files or directories (FoundryVTT uses both)
 echo "Removing all .lock files..."
-find /data -type f -name "*.lock" -delete 2>/dev/null || true
-
-# Also remove the specific lock file FoundryVTT uses
-rm -f /data/.lock 2>/dev/null || true
+find /data -name "*.lock" -exec rm -rf {} + 2>/dev/null || true
+rm -rf /data/.lock 2>/dev/null || true
 
 echo "Lock cleanup complete"
 
