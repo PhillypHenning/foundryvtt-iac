@@ -74,6 +74,49 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# Dedicated IAM user for FoundryVTT S3 asset storage
+resource "aws_iam_user" "foundry_s3" {
+  name = "${var.project_name}-s3-user"
+}
+
+resource "aws_iam_user_policy" "foundry_s3" {
+  name = "${var.project_name}-s3"
+  user = aws_iam_user.foundry_s3.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:PutObjectAcl"]
+      Resource = [
+        "arn:aws:s3:::phil-foundryvtt",
+        "arn:aws:s3:::phil-foundryvtt/*"
+      ]
+    }, {
+      Effect   = "Allow"
+      Action   = ["s3:ListAllMyBuckets"]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_access_key" "foundry_s3" {
+  user = aws_iam_user.foundry_s3.name
+}
+
+# Keep the options-file secret in sync with the IAM user's real credentials
+resource "aws_secretsmanager_secret_version" "options_file" {
+  secret_id = var.foundry_options_file_arn
+  secret_string = jsonencode({
+    buckets = ["phil-foundryvtt"]
+    region  = var.aws_region
+    credentials = {
+      accessKeyId     = aws_iam_access_key.foundry_s3.id
+      secretAccessKey = aws_iam_access_key.foundry_s3.secret
+    }
+  })
+}
+
 # EventBridge Scheduler role for EC2 start/stop
 resource "aws_iam_role" "scheduler_ec2" {
   name = "${var.project_name}-scheduler-ec2-role"
